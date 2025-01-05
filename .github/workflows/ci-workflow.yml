@@ -21,7 +21,7 @@ jobs:
       - name: ☕️ set up JDK 17        # 프로젝트의 java 버전에 맞추어 설정
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
       - name: 👏🏻 grant execute permission for gradlew
@@ -29,4 +29,3 @@ jobs:
 
       - name: 🐘 build with Gradle (without test)
         run: ./gradlew clean build -x test --stacktrace 
-##

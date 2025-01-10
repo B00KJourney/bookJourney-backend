@@ -1,0 +1,139 @@
+spring:
+  profiles:
+    active: local
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: bookjourney.server@gmail.com
+    password: ${EMAIL_SECRET}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    auth-code-expiration-millis: 1800000  # 30 * 60 * 1000 == 30?
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:3306/book_journey
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 108000000 #30??
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/book_journey
+    username: ${LOCAL_DB_USER}
+    password: ${LOCAL_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+#
+#logging:
+#  level:
+#    root: DEBUG
+#    org.springframework.mail: DEBUG
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 10800000 #30??
+
+---
+
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:mysql://:3306/book_journey
+    username: ${LOCAL_DB_USER}
+    password: ${LOCAL_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+#
+#logging:
+#  level:
+#    root: DEBUG
+#    org.springframework.mail: DEBUG
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 10800000 #30??

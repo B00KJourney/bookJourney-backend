@@ -19,4 +19,5 @@ public class RoomInfo {
     private String progressStartDate;
     private String progressEndDate;
     private String imageUrl;
+    private boolean isMember;
 }

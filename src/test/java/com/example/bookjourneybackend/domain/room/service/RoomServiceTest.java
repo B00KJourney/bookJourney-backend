@@ -10,8 +10,7 @@ import com.example.bookjourneybackend.domain.room.domain.Room;
 import com.example.bookjourneybackend.domain.room.domain.RoomType;
 import com.example.bookjourneybackend.domain.room.domain.repository.RoomRepository;
 import com.example.bookjourneybackend.domain.room.dto.request.PostRoomCreateRequest;
-import com.example.bookjourneybackend.domain.room.dto.response.GetRoomDetailResponse;
-import com.example.bookjourneybackend.domain.room.dto.response.PostRoomCreateResponse;
+import com.example.bookjourneybackend.domain.room.dto.response.*;
 import com.example.bookjourneybackend.domain.user.domain.User;
 import com.example.bookjourneybackend.domain.user.domain.repository.UserRepository;
 import com.example.bookjourneybackend.domain.userRoom.domain.UserRole;
@@ -240,4 +239,293 @@ class RoomServiceTest {
         // then
         verify(userRoomRepository).delete(any(UserRoom.class));
     }
+
+    @Test
+    @DisplayName("방 탈퇴 - 방장이 혼자가 아닐 경우 예외 발생")
+    void exitRoomHostCannotLeaveWithMembers() {
+        // given
+        testUserRoom = UserRoom.builder()
+                .userRole(UserRole.HOST)  // 방장 역할
+                .userPercentage(50.0)
+                .user(testUser)
+                .currentPage(100)
+                .room(testRoom)
+                .build();
+
+        testRoom.addUserRoom(UserRoom.builder()
+                .userRole(UserRole.MEMBER)
+                .userPercentage(30.0)
+                .user(User.builder().userId(2L).nickname("다른 멤버").email("member@example.com").password("test123").imageUrl("testImage").build())
+                .currentPage(50)
+                .room(testRoom)
+                .build());
+
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRoomRepository.findUserRoomByRoomAndUserAndStatus(any(), any(), any()))
+                .thenReturn(Optional.of(testUserRoom));
+
+        // when & then
+        GlobalException exception = assertThrows(GlobalException.class, () -> roomService.exitRoom(1L, 1L));
+
+        assertThat(exception.getExceptionStatus()).isEqualTo(HOST_CANNOT_LEAVE_ROOM); // 방장이 혼자가 아닐 때 탈퇴 불가
+        verify(roomRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("방 탈퇴 - 방장이 혼자 남았을 때 방 삭제")
+    void exitRoomHostAloneDeletesRoom() {
+        // given
+        testUserRoom = UserRoom.builder()
+                .userRole(UserRole.HOST)  // 방장
+                .userPercentage(100.0)
+                .user(testUser)
+                .currentPage(200)
+                .room(testRoom)
+                .build();
+
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRoomRepository.findUserRoomByRoomAndUserAndStatus(any(), any(), any()))
+                .thenReturn(Optional.of(testUserRoom));
+
+        // when
+        roomService.exitRoom(1L, 1L);
+
+        // then
+        verify(roomRepository).delete(testRoom); // 방장이 혼자 남아 있으면 방 삭제
+    }
+
+    @Test
+    @DisplayName("방 탈퇴 - 혼자 읽기 방일 경우 방 삭제")
+    void exitRoomAloneRoomDeletes() {
+        // given
+        testRoom = Room.builder()
+                .roomId(2L)
+                .roomType(RoomType.ALONE)  // 혼자 읽기 방
+                .book(testBook)
+                .isPublic(true)
+                .password(null)
+                .roomPercentage(0.0)
+                .startDate(LocalDate.now())
+                .progressEndDate(LocalDate.now().plusDays(10))
+                .recruitCount(1)
+                .build();
+
+        testUserRoom = UserRoom.builder()
+                .userRole(UserRole.HOST)
+                .userPercentage(100.0)
+                .user(testUser)
+                .currentPage(300)
+                .room(testRoom)
+                .build();
+
+        when(roomRepository.findById(2L)).thenReturn(Optional.of(testRoom));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRoomRepository.findUserRoomByRoomAndUserAndStatus(any(), any(), any()))
+                .thenReturn(Optional.of(testUserRoom));
+
+        // when
+        roomService.exitRoom(2L, 1L);
+
+        // then
+        verify(roomRepository).delete(testRoom); // 혼자 읽기 방은 나가면 방 삭제됨
+    }
+
+    @Test
+    @DisplayName("방 탈퇴 - 존재하지 않는 방 예외 발생")
+    void exitRoomNonExistentRoomThrowsException() {
+        // given
+        when(roomRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // when & then
+        GlobalException exception = assertThrows(GlobalException.class, () -> roomService.exitRoom(1L, 1L));
+
+        assertThat(exception.getExceptionStatus()).isEqualTo(CANNOT_FOUND_ROOM); // 방이 없을 때 예외 발생
+    }
+
+    @Test
+    @DisplayName("방 탈퇴 - 존재하지 않는 UserRoom 예외 발생")
+    void exitRoomUserNotInRoomThrowsException() {
+        // given
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRoomRepository.findUserRoomByRoomAndUserAndStatus(any(), any(), any()))
+                .thenReturn(Optional.empty()); // 해당 유저가 방에 없음
+
+        // when & then
+        GlobalException exception = assertThrows(GlobalException.class, () -> roomService.exitRoom(1L, 1L));
+
+        assertThat(exception.getExceptionStatus()).isEqualTo(CANNOT_FOUND_USER_ROOM); // 방에 없는 유저일 때 예외 발생
+    }
+
+    @Test
+    @DisplayName("방 참여 - 성공")
+    void joinRoomSuccess() {
+        // given
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRoomRepository.existsByRoomAndUser(testRoom, testUser)).thenReturn(false);
+        when(userRoomRepository.save(any(UserRoom.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        PostJoinRoomResponse response = roomService.joinRoom(1L, 1L, null);
+
+        // then
+        assertThat(response).isNotNull();
+        verify(userRoomRepository).save(any(UserRoom.class));
+    }
+
+    @Test
+    @DisplayName("방 참여 - 이미 참여한 유저 예외 발생")
+    void joinRoomAlreadyJoinedThrowsException() {
+        // given
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRoomRepository.existsByRoomAndUser(testRoom, testUser)).thenReturn(true); // 이미 참여한 상태
+
+        // when & then
+        GlobalException exception = assertThrows(GlobalException.class, () -> roomService.joinRoom(1L, 1L, null));
+
+        assertThat(exception.getExceptionStatus()).isEqualTo(ALREADY_JOINED_ROOM);
+    }
+
+    @Test
+    @DisplayName("방 참여 - 모집 기간이 끝난 경우 예외 발생")
+    void joinRoomRecruitmentEndedThrowsException() {
+        // given
+        testRoom = Room.builder()
+                .roomId(1L)
+                .progressEndDate(LocalDate.now().minusDays(1)) // 모집 기간이 끝남
+                .recruitEndDate(LocalDate.now().minusDays(2))
+                .book(testBook)
+                .build();
+
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        // when & then
+        GlobalException exception = assertThrows(GlobalException.class, () -> roomService.joinRoom(1L, 1L, null));
+
+        assertThat(exception.getExceptionStatus()).isEqualTo(ROOM_NOT_RECRUITING);
+    }
+
+    @Test
+    @DisplayName("방 참여 - 인원이 다 찬 경우 예외 발생")
+    void joinRoomRoomFullThrowsException() {
+        // given
+        testRoom = Room.builder()
+                .roomId(1L)
+                .recruitCount(1) // 방의 최대 인원
+                .book(testBook)
+                .recruitEndDate(LocalDate.now().plusDays(5))
+                .build();
+
+        testRoom.addUserRoom(testUserRoom); // 방이 이미 다 찼음
+
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        // when & then
+        GlobalException exception = assertThrows(GlobalException.class, () -> roomService.joinRoom(1L, 1L, null));
+
+        assertThat(exception.getExceptionStatus()).isEqualTo(ROOM_FULL);
+    }
+
+    @Test
+    @DisplayName("방 참여 - 비공개 방 비밀번호 오류 예외 발생")
+    void joinRoomInvalidPasswordThrowsException() {
+        // given
+        testRoom = Room.builder()
+                .roomId(1L)
+                .password(1234)
+                .isPublic(false)
+                .book(testBook)
+                .recruitEndDate(LocalDate.now().plusDays(5))
+                .recruitCount(5)
+                .build();
+
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        // when & then
+        GlobalException exception = assertThrows(GlobalException.class, () -> roomService.joinRoom(1L, 1L, 9999));
+
+        assertThat(exception.getExceptionStatus()).isEqualTo(INVALID_ROOM_PASSWORD);
+    }
+
+    @Test
+    @DisplayName("모집 중인 방 검색 - 성공")
+    void searchRecruitmentRoomsSuccess() {
+        // given
+        when(dateUtil.getCurrentWeekOfMonth(any())).thenReturn("2월 3주차");
+        when(dateUtil.getFirstAndLastDayOfWeek(any())).thenReturn(new LocalDate[]{LocalDate.now(), LocalDate.now().plusDays(7)});
+        when(roomRepository.findRecruitmentRooms(any(), any(), any())).thenReturn(List.of(testRoom));
+
+        // when
+        GetRoomRecruitmentResponse response = roomService.searchRecruitmentRooms();
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.roomList()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("읽은 페이지 조회 - 성공")
+    void showRoomPagesSuccess() {
+        // given
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRoomRepository.findUserRoomByRoomAndUser(any(), any())).thenReturn(Optional.of(testUserRoom));
+
+        // when
+        GetRoomPagesResponse response = roomService.showRoomPages(1L, 1L);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.getBookPage()).isEqualTo(300);
+        assertThat(response.getCurrentPage()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("비공개 방 정보 조회 - 성공")
+    void showSearchPrivateRoomsSuccess() {
+        // given
+        testRoom = Room.builder()
+                .roomId(1L)
+                .isPublic(false)
+                .password(1234)
+                .roomName("비공개 방")
+                .book(testBook)
+                .build();
+
+        testUserRoom.setUserRole(UserRole.HOST);
+        testRoom.addUserRoom(testUserRoom);
+
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
+
+        // when
+        GetSearchPrivateRoomResponse response = roomService.showSearchPrivateRooms(1L);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.getRoomName()).isEqualTo("비공개 방");
+    }
+
+    @Test
+    @DisplayName("만료된 방 체크 - 성공")
+    void checkExpiredRoomsSuccess() {
+        // given
+        testRoom.setProgressEndDate(LocalDate.now().minusDays(1)); // 만료된 방
+
+        when(roomRepository.findByProgressEndDateBefore(any())).thenReturn(List.of(testRoom));
+
+        // when
+        roomService.checkExpiredRooms();
+
+        // then
+        verify(roomRepository).save(any(Room.class));
+        verify(userRoomRepository, atLeastOnce()).save(any(UserRoom.class));
+    }
+
 }

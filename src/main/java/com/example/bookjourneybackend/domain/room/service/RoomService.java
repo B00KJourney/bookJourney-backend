@@ -24,6 +24,7 @@ import com.example.bookjourneybackend.domain.userRoom.domain.repository.UserRoom
 import com.example.bookjourneybackend.global.entity.EntityStatus;
 import com.example.bookjourneybackend.global.exception.GlobalException;
 import com.example.bookjourneybackend.global.util.DateUtil;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -58,6 +59,8 @@ public class RoomService {
     private final FavoriteRepository favoriteRepository;
 
     private final RecentSearchService recentSearchService;
+
+    private final EntityManager entityManager;
 
     /**
      * 방 상세정보 조회
@@ -207,6 +210,8 @@ public class RoomService {
         book.addRoom(room);
         bookRepository.save(book);
         roomRepository.save(room); //CascadeType.All 옵션을 제거하고 room도 save (이유 : CascadeType.ALL을 했더니 roomRepository에 메서드가 종료되고 저장되어서 roomId가 null이 뜨는 현상이 발생
+//        entityManager.flush();
+//        entityManager.clear();
 
         return PostRoomCreateResponse.of(room);
     }
@@ -349,7 +354,7 @@ public class RoomService {
                 .orElseThrow(() -> new GlobalException(CANNOT_FOUND_USER));
 
 
-        UserRoom userRoom = userRoomRepository.findUserRoomByRoomAndUserAndStatus(room, user, ACTIVE)
+        UserRoom userRoom = userRoomRepository.findUserRoomByRoomAndUserAndStatusNot(room, user, EXPIRED)
                 .orElseThrow(() -> new GlobalException(CANNOT_FOUND_USER_ROOM));
         return userRoom;
     }

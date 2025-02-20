@@ -30,3 +30,9 @@
 ## API 명세서
 
 [책산책 api 명세서 📄](https://tangy-sovereign-373.notion.site/API-1a0eaa8ab9ff80e29953fc170c977ee5?pvs=4)
+
+## 서버 아키텍처 다이어그램
+
+<img width="990" alt="책산책_서버_아키텍처" src="https://github.com/user-attachments/assets/96eaa593-30c8-4d15-85f1-42f39ac0a026" />
+
+

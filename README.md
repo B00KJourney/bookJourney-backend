@@ -25,6 +25,8 @@
 
 ![image](https://github.com/user-attachments/assets/371f5d55-cef5-4b6e-81a6-9be1b3591df0)
 
+[책산책 ERD 🖇️](https://www.erdcloud.com/d/znwSkQ6S9yueBdoTg)
+
 ## API 명세서
 
-### [책산책 api 명세서 📄](https://tangy-sovereign-373.notion.site/API-1a0eaa8ab9ff80e29953fc170c977ee5?pvs=4)
+[책산책 api 명세서 📄](https://tangy-sovereign-373.notion.site/API-1a0eaa8ab9ff80e29953fc170c977ee5?pvs=4)

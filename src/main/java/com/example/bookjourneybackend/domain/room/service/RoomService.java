@@ -136,7 +136,7 @@ public class RoomService {
         );
 
         List<RoomInfo> roomInfos = rooms.stream()
-                .map(this::mapRoomToRoomInfo)
+                .map(room -> mapRoomToRoomInfo(room, userId))
                 .toList();
 
         return GetRoomSearchResponse.of(roomInfos);
@@ -156,7 +156,10 @@ public class RoomService {
     }
 
     //Room 객체를 RoomInfo 객체로 매핑
-    private RoomInfo mapRoomToRoomInfo(Room room) {
+    private RoomInfo mapRoomToRoomInfo(Room room, Long userId) {
+        boolean isMember = room.getUserRooms().stream()
+                .anyMatch(userRoom -> userRoom.getUser().getUserId().equals(userId));
+
         return RoomInfo.builder()
                 .roomId(room.getRoomId())
                 .isPublic(room.isPublic())
@@ -169,6 +172,7 @@ public class RoomService {
                 .progressStartDate(dateUtil.formatDate(room.getStartDate()))
                 .progressEndDate(dateUtil.formatDate(room.getProgressEndDate()))
                 .imageUrl(room.getBook().getImageUrl())
+                .isMember(isMember)
                 .build();
     }
 

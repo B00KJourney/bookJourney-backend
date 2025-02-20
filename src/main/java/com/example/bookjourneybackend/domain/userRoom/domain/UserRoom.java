@@ -51,12 +51,13 @@ public class UserRoom extends BaseEntity {
     private Room room;
 
     @Builder
-    public UserRoom(UserRole userRole, Double userPercentage, User user, Integer currentPage, Room room) {
+    public UserRoom(UserRole userRole, Double userPercentage, User user, Integer currentPage, Room room, LocalDateTime inActivatedAt) {
         this.userRole = userRole;
         this.userPercentage = userPercentage;
         this.user = user;
         this.currentPage = currentPage;
         this.room = room;
+        this.inActivatedAt = inActivatedAt;
     }
 
     public void updateUserProgress(double percentage, int currentPage) {

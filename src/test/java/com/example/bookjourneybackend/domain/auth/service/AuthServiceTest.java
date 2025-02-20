@@ -11,11 +11,13 @@ import com.example.bookjourneybackend.global.util.JwtAuthenticationFilter;
 import com.example.bookjourneybackend.global.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -24,45 +26,60 @@ import java.util.Optional;
 
 import static com.example.bookjourneybackend.global.entity.EntityStatus.ACTIVE;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 class AuthServiceTest {
 
-    @Autowired
+    @InjectMocks
     private AuthService authService;
 
-    @MockBean
+    @Mock
     private UserRepository userRepository;
 
-    @MockBean
+    @Mock
     private PasswordEncoder passwordEncoder;
 
-    @MockBean
+    @Mock
     private JwtUtil jwtUtil;
 
-    @MockBean
+    @Mock
     private RedisService redisService;
 
-    @MockBean
+    @Mock
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Mock
     private HttpServletResponse response;
+
+    @Mock
     private HttpServletRequest request;
 
+
+    private User mockUser;
     String email = "test@example.com";
     String password = "password123";
     String nickName = "testUser";
     Long userId = 1L;
+
+    @BeforeEach
+    void setUp() {
+        mockUser = User.builder()
+                .userId(1L)
+                .email(email)
+                .password(password)
+                .nickname(nickName)
+                .build();
+    }
+
 
     @Test
     @DisplayName("로그인_성공")
     void loginSuccess() {
 
         // given
-        User mockUser = new User(userId, email, passwordEncoder.encode(password), nickName);
-
         PostAuthLoginRequest loginRequest = new PostAuthLoginRequest(email, password);
 
         when(userRepository.findByEmailAndStatus(email,ACTIVE))
@@ -82,8 +99,7 @@ class AuthServiceTest {
         assertEquals("mockAccessToken", postAuthLoginResponse.getAccessToken());
         assertEquals("mockRefreshToken", postAuthLoginResponse.getRefreshToken());
 
-        doNothing().when(jwtAuthenticationFilter).setAuthentication(request, mockUser.getUserId());
-
+        verify(jwtAuthenticationFilter).setAuthentication(request, mockUser.getUserId());
         verify(redisService).storeRefreshToken("mockRefreshToken", mockUser.getUserId());
     }
 
@@ -154,7 +170,6 @@ class AuthServiceTest {
         String expiredRefreshToken = "expiredToken";
         PostAuthAccessTokenReissueRequest postAuthAccessTokenReissueRequest
                 = new PostAuthAccessTokenReissueRequest(expiredRefreshToken);
-
         when(jwtUtil.validateToken(expiredRefreshToken)).thenReturn(false);
 
         // when & then

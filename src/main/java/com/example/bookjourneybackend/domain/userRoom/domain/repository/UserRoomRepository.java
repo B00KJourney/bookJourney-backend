@@ -29,7 +29,7 @@ public interface UserRoomRepository extends JpaRepository<UserRoom, Long> {
 
     Optional<UserRoom> findUserRoomByRoomAndUser(Room room, User user);
 
-    Optional<UserRoom> findUserRoomByRoomAndUserAndStatus(Room room, User user, EntityStatus status);
+    Optional<UserRoom> findUserRoomByRoomAndUserAndStatusNot(Room room, User user, EntityStatus status);
 
     boolean existsByRoomAndUser(Room room, User user);
 

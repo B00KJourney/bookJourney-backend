@@ -51,7 +51,7 @@ class RoomArchiveServiceTest {
     private UserRoom testUserRoomExpired;
 
     @BeforeEach
-    void setUp() {
+    void beforeEach() {
         testUser = User.builder()
                 .userId(1L)
                 .email("test@example.com")

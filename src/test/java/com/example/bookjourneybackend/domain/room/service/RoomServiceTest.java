@@ -230,7 +230,7 @@ class RoomServiceTest {
         // given
         when(roomRepository.findById(1L)).thenReturn(Optional.ofNullable(testRoom));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRoomRepository.findUserRoomByRoomAndUserAndStatusNot(any(), any(), any()))
+        when(userRoomRepository.findUserRoomByRoomAndUserAndStatus(any(), any(), any()))
                 .thenReturn(Optional.of(testUserRoom));
 
         // when
@@ -262,7 +262,7 @@ class RoomServiceTest {
 
         when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRoomRepository.findUserRoomByRoomAndUserAndStatusNot(any(), any(), any()))
+        when(userRoomRepository.findUserRoomByRoomAndUserAndStatus(any(), any(), any()))
                 .thenReturn(Optional.of(testUserRoom));
 
         // when & then
@@ -286,7 +286,7 @@ class RoomServiceTest {
 
         when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRoomRepository.findUserRoomByRoomAndUserAndStatusNot(any(), any(), any()))
+        when(userRoomRepository.findUserRoomByRoomAndUserAndStatus(any(), any(), any()))
                 .thenReturn(Optional.of(testUserRoom));
 
         // when
@@ -322,7 +322,7 @@ class RoomServiceTest {
 
         when(roomRepository.findById(2L)).thenReturn(Optional.of(testRoom));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRoomRepository.findUserRoomByRoomAndUserAndStatusNot(any(), any(), any()))
+        when(userRoomRepository.findUserRoomByRoomAndUserAndStatus(any(), any(), any()))
                 .thenReturn(Optional.of(testUserRoom));
 
         // when
@@ -350,7 +350,7 @@ class RoomServiceTest {
         // given
         when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRoomRepository.findUserRoomByRoomAndUserAndStatusNot(any(), any(), any()))
+        when(userRoomRepository.findUserRoomByRoomAndUserAndStatus(any(), any(), any()))
                 .thenReturn(Optional.empty()); // 해당 유저가 방에 없음
 
         // when & then

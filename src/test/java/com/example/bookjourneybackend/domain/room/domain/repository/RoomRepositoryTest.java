@@ -23,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static com.example.bookjourneybackend.domain.book.domain.GenreType.NOVEL_POETRY_DRAMA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -112,7 +113,7 @@ class RoomRepositoryTest {
                 .imageUrl("profile.jpg")
                 .build());
 
-        UserRoom userRoom = new UserRoom(UserRole.MEMBER, 0.0, user, 1, room);
+        UserRoom userRoom = new UserRoom(UserRole.MEMBER, 0.0, user, 1, room, LocalDateTime.now());
         userRoomRepository.save(userRoom);
 
         entityManager.flush();

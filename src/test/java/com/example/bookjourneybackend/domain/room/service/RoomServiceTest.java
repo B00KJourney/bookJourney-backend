@@ -230,7 +230,7 @@ class RoomServiceTest {
         // given
         when(roomRepository.findById(1L)).thenReturn(Optional.ofNullable(testRoom));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRoomRepository.findUserRoomByRoomAndUserAndStatus(any(), any(), any()))
+        when(userRoomRepository.findUserRoomByRoomAndUserAndStatusNot(any(), any(), any()))
                 .thenReturn(Optional.of(testUserRoom));
 
         // when

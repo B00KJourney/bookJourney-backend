@@ -30,7 +30,7 @@ public class User extends BaseEntity{
     private String email;
 
     @Setter
-    @Column(name = "password", nullable = false, length = 20)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @Setter
